@@ -27,5 +27,6 @@
 .\objects\main.o: PLL.h
 .\objects\main.o: PWM.h
 .\objects\main.o: UART0.h
+.\objects\main.o: Nokia5110.h
 .\objects\main.o: Encoder.h
 .\objects\main.o: Botones.h

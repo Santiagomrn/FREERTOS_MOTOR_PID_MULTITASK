@@ -5,6 +5,7 @@
 ".\objects\uart0.o"
 ".\objects\encoder.o"
 ".\objects\botones.o"
+".\objects\nokia5110.o"
 ".\objects\clib_arm.o"
 ".\objects\cmsis_os1.o"
 ".\objects\cmsis_os2.o"
