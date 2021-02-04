@@ -7,6 +7,9 @@
 #include "task.h"                       // ARM.FreeRTOS::RTOS:Core
 #include "PLL.h"
 
+// F0 -> IN1 
+// GND -> IN2
+
 void PWM0A_Init(uint16_t period, uint16_t duty){
 		SYSCTL->RCGCGPIO = 0x00007FFF;
 
@@ -18,8 +21,8 @@ void PWM0A_Init(uint16_t period, uint16_t duty){
 
 
 	while((SYSCTL->PRGPIO&0x00000020)==0){};
-	GPIOF_AHB->AFSEL|=0x01;
-	GPIOF_AHB->DEN|=0x01;
+	GPIOF_AHB->AFSEL|=0x01;															//Pin F0 salida del PWM
+	GPIOF_AHB->DEN|=0x01;															
 	
 	GPIOF_AHB->PCTL=(GPIOF_AHB->PCTL&0xFFFFFFF0)+0x00000006;
 	GPIOF_AHB->AMSEL&=~0x01;

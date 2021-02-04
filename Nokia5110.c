@@ -175,6 +175,8 @@ void LcdBitmap(char my_array[]){
 void LcdClear(void){
   for (int index = 0 ; index < (LCD_X * LCD_Y / 8) ; index++)
     lcdwrite(DC_DATA, 0x00);
+	lcdwrite(COMMAND,0X80);            //Ubicamos el cursor el columna 35
+	lcdwrite(COMMAND,0X40);            //Ubicamos el cursor el fila 16
 }
 
 void mostrar_hora_t(int horas,int minutos,int segundos){

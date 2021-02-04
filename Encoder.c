@@ -10,6 +10,9 @@ int numeroDeFlancosDeSubida=0;
 char flancos[5]="0";
 int muestreo =0;
 //varibles del timer para controlar el preriodo de muestreo
+
+//D0 -> CANAL A o B
+
 TimerHandle_t xTimer;																	// Llamamos a la variable xTimer
 BaseType_t xTimerStartEncoder;															// Creamos una variable global tipo BaseType_t
 

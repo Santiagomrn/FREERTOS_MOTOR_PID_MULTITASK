@@ -24,8 +24,10 @@ int RPM_a_PPS(int _offset, int timeMs);
 TaskHandle_t xPRINCIPAL;
 TaskHandle_t xPANTALLA;
 TaskHandle_t xMUESTREO;
-int offset=98;//rpm
+//int offset=25;
 
+int control=0;														//RPM MÁXIMO 4031
+int userInput=4031;											//RPM mínimo 1232
 //semaforos
 SemaphoreHandle_t xSemaphorePantalla = NULL;
 
@@ -39,7 +41,7 @@ int main(void){
 	
 	configurar_botones();
 	configurarEntradaEncoder();
-	PWM0A_Init(65535,65535/2);
+	PWM0A_Init(65535,65535*.5);
 	
 	//crear semaforo
 	xSemaphorePantalla = xSemaphoreCreateMutex();
@@ -58,87 +60,128 @@ int main(void){
 // Tarea Principal
 void task0(void* arg){
 		for(;;){
-		imprimirMensaje("botones");
+		
 				//verifica si boton de Aumentar es presionado;
 				if(botonAumentarPresionado()){				
-						if(offset<100){
-							offset++;
+						if(userInput<4031){   
+							userInput=userInput+10;	
 						}		
 				}
 				//verifica si boton de Disminuir es presionado;
 				if(botonDisminuirPresionado()){	
-						if(offset>0){
-							offset--;			
+						if(userInput>1700){
+								userInput=userInput-10;			
 						}
 				}
-				imprimirMensaje("fin botones");
-				vTaskDelay(50);
+				//imprimirMensaje("fin botones");
+				vTaskDelay(75);
 		}
 }
 
 //muestreo del encoder
 void task1(void* arg){
 	for(;;){
-		imprimirMensaje("Muestreo");
-		countFlancosDeSubidaEncoder(467545);
-		imprimirMensaje("fin Muestreo");
+				
+		//imprimirMensaje("Muestreo");
+		//countFlancosDeSubidaEncoder(467545);
+		
+		countFlancosDeSubidaEncoder(2338);
+		//imprimirMensaje("fin Muestreo");
+		int flancos=getFlancos();																	//Se lee los pulsos en un periodo de 50ms
+		control=calcularPid((userInput*.178/20),flancos);		//offset es el valor que se espera alcanzar en RPM, la funcion RPS sirve para transformar de RPM a PPS
+		PWM0A_Duty(control);
+		
 		vTaskDelay(200);
 	}
+	
 }
 
 //muestra en pantalla
 void task2(void* arg){
 	for(;;){
 		GPIOF_AHB->DATA ^= 0xFF;
-		imprimirMensaje("pantalla");
+		
 				int flancos=getFlancos();
 				char snum[10];
 				// convert int to string [buf]
 				sprintf(snum, "%d", flancos);
+				imprimirMensaje("flancos: ");
 				imprimirMensaje(snum);
-				sprintf(snum, "%d", offset);
+	
+		
+				imprimirMensaje("control: ");
+				sprintf(snum, "%d", control);
 				imprimirMensaje(snum);
-			Nokia5110_OutString("revoluciones: 30");
-			imprimirMensaje("fin pantalla");
+				imprimirMensaje("userInput: ");
+				sprintf(snum, "%d", userInput);
+				imprimirMensaje(snum);
+				/*LcdClear();
+		    char a[7]="RPS: ";
+				a[5]=userInput/10+0x30;
+				a[6]=userInput%10+0x30;
+				Nokia5110_OutString(a);*/
+				LcdClear();
+				Nokia5110_OutString("RPM = ");
+				sprintf(snum, "%d", userInput);
+				Nokia5110_OutString(snum);
+				//imprimirMensaje("fin pantalla");
 		
 		vTaskDelay(500);
 	
 	}
 }
-
+/*
 //calculo del PID
 void task3(void* arg){
-	for(;;){
-		
-		int control=calcularPid(RPM_a_PPS(offset,50),50);
-		PWM0A_Duty(control);
-		vTaskDelay(250);
 	
+	for(;;){
+		 char snum[10];
+		int flancos=getFlancos();																	//Se lee los pulsos en un periodo de 50ms
+		control=calcularPid((offset*.178/20),flancos);		//offset es el valor que se espera alcanzar en RPM, la funcion RPS sirve para transformar de RPM a PPS
+		
+		sprintf(snum, "%d", control);
+		imprimirMensaje("control: ");
+		imprimirMensaje(snum);
+		
+										
+		vTaskDelay(250);
+		
 	}
-}
+}*/
 
 // VARIABLE GLOBAL [Error previo]
 float Error_0=0; //error anterior  [Variable Global]
-float Integral=0;
+float Integral=65535*.49;
 
 int calcularPid(int _offset, int _input ){
-    float kp = 0.02; // Variable proporcional
-    float ki = 0.7; // Variable integral
-    float kd = 0.0006; // Variable diferencial
-    float error = 0; // error actual
+    float kp = 10; // Variable proporcional
+    float ki = 2000; // Variable integral
+    float kd = 10; // Variable diferencial
+    int error = 0; // error actual
     float Proporcional =0;  
     float Derivativo=0;
     float control ;
     float T = 0.050; // Periodo de muestreo en Segundos [50ms]
-    error = _offset - _input;
+		char snum[10];
+    error = _offset - _input;													//_offset equivale a RPS a pulsos por segundo  _input pulsos por segundo
     Proporcional = error * kp;
     Integral = Integral + error * ki * T;
     Derivativo = (error - Error_0) * kd / T;
     Error_0 = error;
+			sprintf(snum, "%d", error);
+		imprimirMensaje("error: ");
+		imprimirMensaje(snum);
+		
     control = (int) (Proporcional+Integral+Derivativo);
-    if(control > 100){
-        control = 100;
+    if(control > 65535){
+        control = 65535*.99;
     }
+		/*
+		if(control<65535*.5){
+				control=65535*.5;
+		}*/
+		
+	
     return control;
 }
 int RPM_a_PPS(int _offset,int timeMs ){//rpm
@@ -146,10 +189,13 @@ int RPM_a_PPS(int _offset,int timeMs ){//rpm
     // pulsos por segundo correspondiente al valor que debería obtenerse 
     // por parte del encoder
     // 334 pulsos equivale a 1 revolución
-    _offset = (_offset/60) * (360/1.07);
+
+	  _offset = (_offset) * (360/1.07);
+	
     // 0.05ms * 20 * 60 -> _input * 20 * 60
     // 1 min -> _input * 20 * 60
-
+	
+		
 	return _offset;
 }
 
