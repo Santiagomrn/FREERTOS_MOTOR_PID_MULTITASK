@@ -5,6 +5,7 @@
 #include "FreeRTOSConfig.h"             // ARM.FreeRTOS::RTOS:Config
 #include "FreeRTOS.h"                   // ARM.FreeRTOS::RTOS:Core
 
+// Prototipos de funciones
 void configurarEntradaEncoder(void);
 int countFlancosDeSubidaEncoder(int time);
 int getFlancos(void);

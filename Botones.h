@@ -6,6 +6,7 @@
 #include "FreeRTOSConfig.h"             // ARM.FreeRTOS::RTOS:Config
 #include "FreeRTOS.h"                   // ARM.FreeRTOS::RTOS:Core
 
+// Prototipos de función
 void configurar_botones(void);
 int botonAumentarPresionado(void);
 int botonDisminuirPresionado(void);
